@@ -3,6 +3,9 @@ import CalHeatmap from "cal-heatmap";
 import "cal-heatmap/cal-heatmap.css";
 import { onMounted, onUnmounted, watch, ref, nextTick } from "vue";
 import { useSettingStore } from '../stores/settingStore';
+import CalendarLabel from 'cal-heatmap/plugins/CalendarLabel';
+import Legend from 'cal-heatmap/plugins/Legend';
+import Tooltip from 'cal-heatmap/plugins/Tooltip';
 
 const settingStore = useSettingStore();
 let cal = null;
@@ -73,35 +76,70 @@ const initializeCalendar = async (useActualData = false) => {
     }
 
     cal = new CalHeatmap();
-    
-    await cal.paint({
-      itemSelector: "#heatmap",
-      data: {
-        source: calendarData,
-        x: "date",
-        y: "value",
-      },
-      date: { start: startDate },
-      range: range,
-      domain: {
-        type: domainType,
-        gutter: 4,
-      },
-      subDomain: {
-        type: subDomainType,
-        width: domainType === "year" ? 10 : 15,
-        height: domainType === "year" ? 10 : 15,
-        radius: 2,
-        label: domainType === "year" ? null : "DD",
-      },
-      scale: {
-        color: {
-          range: ["#e5e7eb", "#2ce771ff", "#83cb43ff", "#debc4aff", "#e97a25ff", "#ef4444"], // gray → green → yellow → red
-          type: "threshold",
-          domain: [0, 1, 2, 3, 4, 5], 
+
+        await cal.paint(
+        {
+          itemSelector: "#heatmap",
+          data: {
+            source: calendarData,
+            x: "date",
+            y: "value",
+          },
+          date: { start: startDate },
+          range: range,
+          domain: {
+            type: domainType,
+            gutter: 4,
+          },
+          subDomain: {
+            type: subDomainType,
+            width: domainType === "year" ? 10 : 15,
+            height: domainType === "year" ? 10 : 15,
+            radius: 2,
+            label: domainType === "year" ? null : "DD",
+          },
+          scale: {
+            color: {
+              range: ["#e5e7eb", "#2ce771ff", "#83cb43ff", "#debc4aff", "#e97a25ff", "#ef4444"], // gray → green → yellow → red
+              type: "threshold",
+              domain: [0, 1, 2, 3, 4, 5], 
+            },
+          },
         },
-      },
-    });
+        [
+            [
+              Tooltip,
+              {
+                text: function (date, value, dayjsDate) {
+                  const dateString = dayjsDate.format('YYYY-MM-DD');
+                  const dayInfo = pollutionData.value.find(item => item.calendarData.date === dateString);
+                  
+                  if (dayInfo) {
+                    let tooltipText = `📅 ${dayInfo.dateString}\n🏙️ ${dayInfo.cityName}\n🌍`;
+                    
+                    if (dayInfo.pollutants) {
+                      Object.entries(dayInfo.pollutants).forEach(([pollutant, pollutantValue]) => {
+                        tooltipText += `\n• ${pollutant.toUpperCase()}: ${pollutantValue}`;
+                      });
+                    }
+                    
+                    return tooltipText;
+                  }
+                  
+                  return `📅 ${dayjsDate.format('MMM DD, YYYY')}\n📊 Value: ${value || 'No data'}`;
+                },
+              },
+            ],
+            [
+                CalendarLabel,
+                {
+                width: 30,
+                textAlign: 'start',
+                text: () => dayjs.weekdaysShort().map((d, i) => (i % 2 == 0 ? '' : d)),
+                },
+            ]
+        ]
+    );
   } catch (error) {
     console.error('Error initializing calendar:', error);
   }

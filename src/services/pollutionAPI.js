@@ -38,14 +38,14 @@ class PollutionAPI {
    */
   getCityName(cityId) {
     const cityMap = {
-      1: 'tokyo',
-      2: 'barcelona',
-      3: 'london', 
-      4: 'ankara',
-      5: 'mumbai',
-      6: 'madrid'
+      1: 'Tokyo',
+      2: 'Barcelona',
+      3: 'London', 
+      4: 'Ankara',
+      5: 'Mumbai',
+      6: 'Madrid'
     };
-    return cityMap[cityId] || 'ankara';
+    return cityMap[cityId] || 'Ankara';
   }
 
   /**

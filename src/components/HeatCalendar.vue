@@ -1,13 +1,14 @@
 <script setup>
 import CalHeatmap from "cal-heatmap";
 import "cal-heatmap/cal-heatmap.css";
-import { onMounted, watch, ref, nextTick } from "vue";
+import { onMounted, onUnmounted, watch, ref, nextTick } from "vue";
 import { useSettingStore } from '../stores/settingStore';
 
 const settingStore = useSettingStore();
 let cal = null;
+const pollutionData = ref([]);
 
-const initializeCalendar = async () => {
+const initializeCalendar = async (useActualData = false) => {
   try {
     const dateRange = settingStore.dateRange;
     
@@ -31,36 +32,67 @@ const initializeCalendar = async () => {
     const startDate = new Date(dateRange[0]);
     const endDate = new Date(dateRange[1]);
     
-    // Calculate number of days between start and end date
+    // Calculate number of days and months between start and end date
     const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-    const monthsToShow = Math.max(1, Math.ceil(daysDiff / 30));
+    const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                       (endDate.getMonth() - startDate.getMonth());
+    
+    // Determine the view type and range
+    let domainType, subDomainType, range;
+    
+    if (startDate.getMonth() === endDate.getMonth() && startDate.getFullYear() === endDate.getFullYear()) {
+      // Same month - show single month view
+      domainType = "month";
+      subDomainType = "day";
+      range = 1;
+    } else if (monthsDiff <= 2) {
+      // Less than or equal to 2 months - show month view
+      domainType = "month";
+      subDomainType = "day";
+      range = monthsDiff + 1;
+    } else {
+      // More than 2 months - show year view
+      domainType = "year";
+      subDomainType = "month";
+      range = 1;
+    }
+
+    // Use actual pollution data if available, otherwise use sample data
+    let calendarData;
+    if (useActualData && pollutionData.value.length > 0) {
+      calendarData = pollutionData.value.map(item => item.calendarData);
+      console.log('Using actual pollution data for calendar:', calendarData);
+    } else {
+      // Sample data
+      calendarData = [
+        { date: startDate.toISOString().split('T')[0], value: 1 }, 
+        { date: new Date(startDate.getTime() + 86400000).toISOString().split('T')[0], value: 2 }, 
+        { date: new Date(startDate.getTime() + 172800000).toISOString().split('T')[0], value: 5 }, 
+        { date: new Date(startDate.getTime() + 259200000).toISOString().split('T')[0], value: 3 }
+      ];
+    }
 
     cal = new CalHeatmap();
     
     await cal.paint({
       itemSelector: "#heatmap",
       data: {
-        source: [
-          { date: startDate.toISOString().split('T')[0], value: 1 }, 
-          { date: new Date(startDate.getTime() + 86400000).toISOString().split('T')[0], value: 2 }, 
-          { date: new Date(startDate.getTime() + 172800000).toISOString().split('T')[0], value: 5 }, 
-          { date: new Date(startDate.getTime() + 259200000).toISOString().split('T')[0], value: 3 }
-        ],
+        source: calendarData,
         x: "date",
         y: "value",
       },
       date: { start: startDate },
-      range: monthsToShow,
+      range: range,
       domain: {
-        type: "month",
+        type: domainType,
         gutter: 4,
       },
       subDomain: {
-        type: "day",
-        width: 15,
-        height: 15,
+        type: subDomainType,
+        width: domainType === "year" ? 10 : 15,
+        height: domainType === "year" ? 10 : 15,
         radius: 2,
-        label: "DD",
+        label: domainType === "year" ? null : "DD",
       },
       scale: {
         color: {
@@ -75,8 +107,29 @@ const initializeCalendar = async () => {
   }
 };
 
+// Handle pollution data updates
+const handlePollutionDataUpdate = (event) => {
+  pollutionData.value = event.detail;
+  console.log('Received pollution data update:', pollutionData.value);
+  initializeCalendar(true); // Reinitialize with actual data
+};
+
 onMounted(() => {
   initializeCalendar();
+  // Listen for pollution data updates
+  window.addEventListener('pollutionDataUpdated', handlePollutionDataUpdate);
+});
+
+onUnmounted(() => {
+  // Cleanup
+  if (cal) {
+    try {
+      cal.destroy();
+    } catch (e) {
+      console.warn('Error destroying calendar on unmount:', e);
+    }
+  }
+  window.removeEventListener('pollutionDataUpdated', handlePollutionDataUpdate);
 });
 
 // Watch for changes in date range and reinitialize calendar

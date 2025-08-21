@@ -3,6 +3,7 @@ import CalHeatmap from "cal-heatmap";
 import "cal-heatmap/cal-heatmap.css";
 import { onMounted, onUnmounted, watch, ref, nextTick } from "vue";
 import { useSettingStore } from '../stores/settingStore';
+import { MaButton } from '@mobileaction/action-kit';
 import CalendarLabel from 'cal-heatmap/plugins/CalendarLabel';
 import Legend from 'cal-heatmap/plugins/Legend';
 import Tooltip from 'cal-heatmap/plugins/Tooltip';
@@ -10,6 +11,20 @@ import Tooltip from 'cal-heatmap/plugins/Tooltip';
 const settingStore = useSettingStore();
 let cal = null;
 const pollutionData = ref([]);
+const showNavigation = ref(false);
+
+// Navigation functions
+const goToPrevious = () => {
+  if (cal) {
+    cal.previous();
+  }
+};
+
+const goToNext = () => {
+  if (cal) {
+    cal.next();
+  }
+};
 
 const initializeCalendar = async (useActualData = false) => {
   try {
@@ -56,9 +71,12 @@ const initializeCalendar = async (useActualData = false) => {
     } else {
       // More than 2 months - show year view
       domainType = "year";
-      subDomainType = "month";
+      subDomainType = "day";
       range = 1;
     }
+
+    // Show navigation for multi-year views or large date ranges
+    showNavigation.value = range > 1 || monthsDiff > 2;
 
     // Use actual pollution data if available, otherwise use sample data
     let calendarData;
@@ -93,8 +111,8 @@ const initializeCalendar = async (useActualData = false) => {
           },
           subDomain: {
             type: subDomainType,
-            width: domainType === "year" ? 10 : 15,
-            height: domainType === "year" ? 10 : 15,
+            width: domainType === "year" ? 15 : 25,
+            height: domainType === "year" ? 15 : 25,
             radius: 2,
             label: domainType === "year" ? null : "DD",
           },
@@ -179,5 +197,25 @@ watch(() => settingStore.dateRange, () => {
 </script>
 
 <template>
-  <div id="heatmap"></div>
+  <div class="calendar-container">
+    <div id="heatmap" class="mb-4"></div>
+    
+    <!-- Navigation buttons for multi-year or large date ranges -->
+    <div v-if="showNavigation" class="flex justify-center space-x-2 mt-4">
+      <MaButton 
+        @click="goToPrevious"
+        variant="primary"
+        size="medium"
+      >
+        ←
+      </MaButton>
+      <MaButton 
+        @click="goToNext"
+        variant="primary"
+        size="medium"
+      >
+        →
+      </MaButton>
+    </div>
+  </div>
 </template>

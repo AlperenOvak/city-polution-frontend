@@ -7,7 +7,7 @@ export const POLLUTION_LEVELS = {
   GOOD: {
     value: 1,
     name: 'Good',
-    color: '#2ce771ff',
+    color: '#3be72cff',
     textClass: 'text-green-500',
     bgClass: 'bg-green-500',
     description: 'Air quality is considered satisfactory, and air pollution poses little or no risk.'
@@ -93,7 +93,7 @@ export const getPollutionColorRange = () => {
     POLLUTION_LEVELS.POOR.color,
     POLLUTION_LEVELS.MODERATE.color,
     POLLUTION_LEVELS.SEVERE.color,
-    POLLUTION_LEVELS.HAZARDOUS.color
+    POLLUTION_LEVELS.HAZARDOUS.color,
   ];
 };
 
@@ -102,7 +102,7 @@ export const getPollutionColorRange = () => {
  * @returns {Array<number>} Array of threshold values
  */
 export const getPollutionThresholds = () => {
-  return [0, 1, 2, 3, 4, 5, 6];
+  return [1, 2, 3, 4, 5, 6, 7];
 };
 
 /**

@@ -198,7 +198,6 @@ const initializeCalendar = async (useActualData = false) => {
         dayData: dayData,
         pollutants: dayData?.pollutants || null
       };
-      
       // Show the modal
       modalVisible.value = true;
     });

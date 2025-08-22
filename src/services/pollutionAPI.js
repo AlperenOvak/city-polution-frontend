@@ -74,12 +74,11 @@ class PollutionAPI {
     
         // Calculate average value
         const values = Object.values(pollutantValues);
-        const averageValue = values.reduce((sum, v) => sum + v, 0) / values.length;
-    
+        const averageValue = Math.round(values.reduce((sum, v) => sum + v, 0) / values.length);
+
         // Determine overall level based on worst pollutant
-        const worstValue = Math.max(...values);
         const overallLevel = Object.keys(levelMap).find(
-          key => levelMap[key] === worstValue
+          key => levelMap[key] ===  averageValue
         ) || 'Good';
 
     return { overallLevel, averageValue, pollutants: pollutantValues };

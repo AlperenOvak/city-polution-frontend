@@ -62,8 +62,9 @@ class PollutionAPI {
           'Good': 1,
           'Satisfactory': 2,
           'Poor': 3,
-          'Moderate': 3,
-          'Severe': 4
+          'Moderate': 4,
+          'Severe': 5,
+          'Hazardous': 6
         };
     
         // Assign numeric values to each pollutant

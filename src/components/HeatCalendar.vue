@@ -7,6 +7,13 @@ import { MaButton, MaModal, MaTypography } from '@mobileaction/action-kit';
 import CalendarLabel from 'cal-heatmap/plugins/CalendarLabel';
 import Legend from 'cal-heatmap/plugins/Legend';
 import Tooltip from 'cal-heatmap/plugins/Tooltip';
+import { 
+  getPollutionLevelInfo, 
+  getPollutionLevelClass,
+  getPollutionLevelByName,
+  getPollutionColorRange,
+  getPollutionThresholds 
+} from '../utils/pollutionLevels';
 
 const settingStore = useSettingStore();
 let cal = null;
@@ -90,9 +97,11 @@ const initializeCalendar = async (useActualData = false) => {
       // Sample data
       calendarData = [
         { date: startDate.toISOString().split('T')[0], value: 1 }, 
-        { date: new Date(startDate.getTime() + 86400000).toISOString().split('T')[0], value: 2 }, 
-        { date: new Date(startDate.getTime() + 172800000).toISOString().split('T')[0], value: 5 }, 
-        { date: new Date(startDate.getTime() + 259200000).toISOString().split('T')[0], value: 3 }
+        { date: new Date(startDate.getTime() + 86400000).toISOString().split('T')[0], value: 1 },
+        { date: new Date(startDate.getTime() + 172800000).toISOString().split('T')[0], value: 2 },
+        { date: new Date(startDate.getTime() + 259200000).toISOString().split('T')[0], value: 3 },
+        { date: new Date(startDate.getTime() + 345600000).toISOString().split('T')[0], value: 4 },
+        { date: new Date(startDate.getTime() + 432000000).toISOString().split('T')[0], value: 5 },
       ];
     }
 
@@ -121,9 +130,9 @@ const initializeCalendar = async (useActualData = false) => {
           },
           scale: {
             color: {
-              range: ["#e5e7eb", "#2ce771ff", "#83cb43ff", "#debc4aff", "#e97a25ff", "#ef4444"], // gray → green → yellow → red
+              range: getPollutionColorRange(),
               type: "threshold",
-              domain: [0, 1, 2, 3, 4, 5], 
+              domain: getPollutionThresholds(),
             },
           },
         },
@@ -265,8 +274,19 @@ watch(() => settingStore.dateRange, () => {
         <div v-if="selectedDayData" class="space-y-4">
           <div v-if="selectedDayData.dayData" class="space-y-4">
             <!-- Basic Information -->
-            <div class="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-              <div>
+            <div 
+              class="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg relative overflow-hidden"
+              :style="selectedDayData.dayData ? {
+                backgroundImage: `url(${settingStore.cityOptions.find(city => city.value === settingStore.selectedCity)?.img})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              } : {}"
+            >
+              <!-- Semi-transparent overlay -->
+              <div class="absolute inset-0 bg-gray-50 bg-opacity-80 rounded-lg"></div>
+              
+              <div class="relative z-10">
                 <MaTypography tag="div" type="body-2" weight="medium" class="text-gray-700">
                   City:
                 </MaTypography>
@@ -274,7 +294,7 @@ watch(() => settingStore.dateRange, () => {
                   {{ selectedDayData.dayData.cityName }}
                 </MaTypography>
               </div>
-              <div>
+              <div class="relative z-10">
                 <MaTypography tag="div" type="body-2" weight="medium" class="text-gray-700">
                   Date:
                 </MaTypography>
@@ -285,33 +305,33 @@ watch(() => settingStore.dateRange, () => {
             </div>
             
             <!-- Pollution Level and Value -->
-            <div class="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-              <div>
-                <MaTypography tag="div" type="body-2" weight="medium" class="text-gray-700">
-                  Pollution Level:
+            <div 
+              class="gap-4 p-4 bg-gray-50 rounded-lg relative overflow-hidden"
+              :style="selectedDayData.dayData ? {
+                backgroundImage: `url(${settingStore.cityOptions.find(city => city.value === settingStore.selectedCity)?.img})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              } : {}"
+            >
+              <!-- Color overlay based on pollution level -->
+              <div 
+                class="absolute inset-0 rounded-lg"
+                :class="getPollutionLevelByName(selectedDayData.dayData.pollutionLevel)?.bgClass || 'bg-gray-500'"
+                style="opacity: 0.7;"
+              ></div>
+              
+              <div class="relative z-10">
+                <MaTypography tag="div" type="body-2" weight="medium" class="text-white mb-2">
+                  Average Pollution Level:
                 </MaTypography>
                 <MaTypography 
                   tag="div" 
-                  type="body-1" 
-                  weight="semibold"
-                  :class="{
-                    'text-green-600': selectedDayData.dayData.pollutionLevel === 'Good',
-                    'text-yellow-600': selectedDayData.dayData.pollutionLevel === 'Moderate',
-                    'text-orange-600': selectedDayData.dayData.pollutionLevel === 'Unhealthy for Sensitive Groups',
-                    'text-red-600': selectedDayData.dayData.pollutionLevel === 'Unhealthy',
-                    'text-purple-600': selectedDayData.dayData.pollutionLevel === 'Very Unhealthy',
-                    'text-red-800': selectedDayData.dayData.pollutionLevel === 'Hazardous'
-                  }"
+                  type="heading-5" 
+                  weight="bold"
+                  class="text-white drop-shadow-lg text-center"
                 >
                   {{ selectedDayData.dayData.pollutionLevel }}
-                </MaTypography>
-              </div>
-              <div>
-                <MaTypography tag="div" type="body-2" weight="medium" class="text-gray-700">
-                  Pollution Value:
-                </MaTypography>
-                <MaTypography tag="div" type="body-1" weight="semibold">
-                  {{ selectedDayData.dayData.value }}
                 </MaTypography>
               </div>
             </div>
@@ -321,15 +341,17 @@ watch(() => settingStore.dateRange, () => {
               <MaTypography tag="div" type="heading-6" weight="semibold" class="text-center">
                 🌫️ Individual Pollutants
               </MaTypography>
-              <div class="grid grid-cols-2 gap-3 p-4 bg-blue-50 rounded-lg">
+              <div class="grid grid-cols-1 gap-3 p-4 bg-blue-50 rounded-lg">
                 <div v-for="(value, pollutant) in selectedDayData.pollutants" :key="pollutant" 
-                     class="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                  <MaTypography tag="span" type="body-2" weight="medium" class="text-gray-800">
-                    {{ pollutant.toUpperCase() }}:
-                  </MaTypography>
-                  <MaTypography tag="span" type="body-2" weight="semibold" class="text-blue-600">
-                    {{ value }} μg/m³
-                  </MaTypography>
+                     class="flex flex-col p-3 bg-white rounded shadow-sm">
+                  <div class="flex justify-between items-center mb-2">
+                    <MaTypography tag="span" type="body-2" weight="semibold" class="text-gray-800">
+                      {{ pollutant.toUpperCase() }}
+                    </MaTypography>
+                    <MaTypography tag="span" type="body-2" weight="medium" :class="getPollutionLevelInfo(value).textClass">
+                      {{ getPollutionLevelInfo(value).name }}
+                    </MaTypography>
+                  </div>
                 </div>
               </div>
             </div>
@@ -337,7 +359,9 @@ watch(() => settingStore.dateRange, () => {
             <!-- Additional Info -->
             <div class="p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
               <MaTypography tag="div" type="body-2" class="text-yellow-800">
-                💡 <strong>Tip:</strong> Values are measured in micrograms per cubic meter (μg/m³). 
+                💡 <strong>Tip:</strong> Pollution levels range from 1-6+: 
+                <strong>1=Good</strong>, <strong>2=Satisfactory</strong>, <strong>3=Poor</strong>, 
+                <strong>4=Moderate</strong>, <strong>5=Severe</strong>, <strong>6+=Hazardous</strong>. 
                 Lower values indicate better air quality.
               </MaTypography>
             </div>

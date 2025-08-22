@@ -40,7 +40,6 @@ const modalVisible = computed({
   <MaModal
     closable
     v-model:visible="modalVisible"
-    :bodyTitle="selectedDayData?.formattedDate || 'Pollution Data'"
   > 
     <template #content>
       <div v-if="selectedDayData" class="space-y-4">
@@ -151,5 +150,6 @@ const modalVisible = computed({
         </div>
       </div>
     </template> 
+    <template #title>{{ selectedDayData?.formattedDate + ', ' + selectedDayData?.dayData.cityName || 'Pollution Data' }}</template>
   </MaModal>
 </template>

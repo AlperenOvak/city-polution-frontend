@@ -1,6 +1,6 @@
 <template>
   <MaRadioGroup v-model:value="selectedValue"
-                class="w-full overflow-x-auto"
+                class="w-full overflow-x-auto md:text-sm scale-75 md:scale-100"
   >
     <MaRadioCard 
         v-for="option in options"

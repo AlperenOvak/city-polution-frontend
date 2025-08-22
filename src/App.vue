@@ -46,16 +46,8 @@
 
     <!-- Components Row -->
     <div class="w-full flex items-center space-x-4">
-      <div class="w-1/4 flex flex-col items-center space-y-4">
+      <div class="w-1/4 flex flex-col items-center">
         <DatePicker />
-        <MaButton 
-          @click="handleCheck" 
-          variant="primary"
-          :loading="loading"
-          :disabled="!settingStore.selectedCity || !settingStore.dateRange"
-        >
-          Check Pollution Data
-        </MaButton>
       </div>
       <div class="w-3/4 flex items-center">
         <CitySelector />
@@ -83,7 +75,7 @@ import {
 } from "@mobileaction/action-kit";
 import { useSettingStore } from './stores/settingStore';
 import pollutionAPI from './services/pollutionAPI.js';
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 
 export default {
   name: 'App',
@@ -106,14 +98,7 @@ export default {
     
     const handleCheck = async () => {
       if (!settingStore.selectedCity || !settingStore.dateRange) {
-        MaNotification.error(
-            {"size":"large",
-              "variant":"filled",
-              "title":"Failed to fetch data",
-              "description":"Please select a city and date range"
-            }
-        )
-        return;
+        return; // Silently return if data is not ready
       }
 
       loading.value = true;
@@ -126,13 +111,6 @@ export default {
         );
 
         pollutionData.value = data;
-        MaNotification.success(
-            {"size":"large",
-              "variant":"filled",
-              "title":"Pollution data fetched:",
-              "description":`Loaded ${pollutionData.length} days of data`
-            }
-        )
 
         // Trigger HeatCalendar update
         window.dispatchEvent(new CustomEvent('pollutionDataUpdated', { 
@@ -153,8 +131,28 @@ export default {
       }
     };
 
+    // Watch for changes in selectedCity and dateRange
+    watch(
+      () => settingStore.selectedCity,
+      () => {
+        handleCheck();
+      }
+    );
+
+    watch(
+      () => settingStore.dateRange,
+      () => {
+        handleCheck();
+      },
+      { deep: true }
+    );
+
+    // Initial data load
+    onMounted(() => {
+      handleCheck();
+    });
+
     return {
-      handleCheck,
       loading,
       pollutionData,
       settingStore

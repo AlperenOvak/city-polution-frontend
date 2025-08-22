@@ -11,10 +11,10 @@
     >
       <template #suffix>
         <div class="w-40">
-          <ma-image2
-              :src=option.img
-              alt="Example Image"
-              class="w-full h-full"
+          <img
+            :src="option.img"
+            :alt="`${option.text} city map`"
+            class="w-full h-full object-cover rounded"
           />
         </div>
       </template>
@@ -24,15 +24,14 @@
 
 <script>
 import { ref, computed } from 'vue';
-import { MaRadioCard, MaRadioGroup, MaImage2 } from '@mobileaction/action-kit';
+import { MaRadioCard, MaRadioGroup } from '@mobileaction/action-kit';
 import { useSettingStore } from '../stores/settingStore';
 
 export default {
   name: 'CitySelector',
   components: {
     MaRadioCard,
-    MaRadioGroup,
-    MaImage2
+    MaRadioGroup
   },
   setup() {
     const settingStore = useSettingStore();

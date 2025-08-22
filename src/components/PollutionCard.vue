@@ -41,7 +41,6 @@ const modalVisible = computed({
     closable
     v-model:visible="modalVisible"
     :bodyTitle="selectedDayData?.formattedDate || 'Pollution Data'"
-    type="info"
   > 
     <template #content>
       <div v-if="selectedDayData" class="space-y-4">

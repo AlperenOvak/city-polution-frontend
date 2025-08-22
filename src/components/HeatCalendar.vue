@@ -239,12 +239,6 @@ onUnmounted(() => {
   window.removeEventListener('pollutionDataUpdated', handlePollutionDataUpdate);
 });
 
-// Watch for changes in date range and reinitialize calendar
-watch(() => settingStore.dateRange, () => {
-  setTimeout(() => {
-    initializeCalendar();
-  }, 100); // Small delay to avoid rapid updates
-}, { deep: true });
 </script>
 
 <template>

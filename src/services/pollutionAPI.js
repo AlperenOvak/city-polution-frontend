@@ -2,6 +2,9 @@
  * API service for pollution data
  */
 
+import { POLLUTION_LEVELS, getPollutionLevelInfo } from '../utils/pollutionLevels';
+import { useSettingStore } from '../stores/settingStore';
+
 const API_BASE_URL = '/api';
 
 class PollutionAPI {
@@ -37,15 +40,9 @@ class PollutionAPI {
    * @returns {string}
    */
   getCityName(cityId) {
-    const cityMap = {
-      1: 'Tokyo',
-      2: 'Barcelona',
-      3: 'London', 
-      4: 'Ankara',
-      5: 'Mumbai',
-      6: 'Madrid'
-    };
-    return cityMap[cityId] || 'Ankara';
+    const settingStore = useSettingStore();
+    const city = settingStore.cityOptions.find(option => option.value === cityId);
+    return city ? city.text : 'Ankara'; // Default fallback
   }
 
   /**
@@ -57,15 +54,11 @@ class PollutionAPI {
         const pollutants = { ...categories }; // clone object
         const pollutantValues = {};
 
-        // Map category names to numeric values
-        const levelMap = {
-          'Good': 1,
-          'Satisfactory': 2,
-          'Poor': 3,
-          'Moderate': 4,
-          'Severe': 5,
-          'Hazardous': 6
-        };
+        // Create level map from centralized POLLUTION_LEVELS
+        const levelMap = {};
+        Object.values(POLLUTION_LEVELS).forEach(level => {
+          levelMap[level.name] = level.value;
+        });
     
         // Assign numeric values to each pollutant
         Object.keys(pollutants).forEach(pollutant => {
@@ -76,10 +69,8 @@ class PollutionAPI {
         const values = Object.values(pollutantValues);
         const averageValue = Math.round(values.reduce((sum, v) => sum + v, 0) / values.length);
 
-        // Determine overall level based on worst pollutant
-        const overallLevel = Object.keys(levelMap).find(
-          key => levelMap[key] ===  averageValue
-        ) || 'Good';
+        // Get overall level using centralized function
+        const overallLevel = getPollutionLevelInfo(averageValue).name;
 
     return { overallLevel, averageValue, pollutants: pollutantValues };
     }

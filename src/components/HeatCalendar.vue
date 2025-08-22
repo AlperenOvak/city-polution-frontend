@@ -72,12 +72,6 @@ const handleDayClick = (event, timestamp, value) => {
   
   const dayData = pollutionData.value.find(item => item.calendarData.date === dateString);
   
-  console.log('Day clicked:', dateString);
-  if (dayData && dayData.pollutants) {
-    console.log('Pollutants:', dayData.pollutants);
-  } else {
-    console.log('No pollutant data available for this date');
-  }
   
   // Store the selected day data for the modal
   selectedDayData.value = {
@@ -217,7 +211,6 @@ const initializeCalendar = async () => {
 // Handle pollution data updates
 const handlePollutionDataUpdate = (event) => {
   pollutionData.value = event.detail;
-  console.log('Received pollution data update:', pollutionData.value);
   initializeCalendar(); // Reinitialize with updated data
 };
 

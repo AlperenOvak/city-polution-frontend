@@ -90,8 +90,6 @@ class PollutionAPI {
     const url = `${this.baseURL}/pollution?city=${city}&startDate=${start}&endDate=${end}`;
     
     try {
-      console.log('Making request to:', url);
-      
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -117,7 +115,6 @@ class PollutionAPI {
       const transformedData = data.results?.map(dayData => {
         const date = this.parseDate(dayData.date);
         const analysis = this.analyzePollution(dayData.categories);
-        console.log('Transformed data for date:', date, analysis.overallLevel, analysis.averageValue);
         return {
           date: date,
           dateString: dayData.date,

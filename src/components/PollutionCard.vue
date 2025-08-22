@@ -110,7 +110,7 @@ const modalVisible = computed({
           <!-- Individual Pollutants -->
           <div v-if="selectedDayData.pollutants" class="space-y-3">
             <MaTypography tag="div" type="heading-6" weight="semibold" class="text-center">
-              🌫️ Individual Pollutants
+              Individual Pollutants
             </MaTypography>
             <div class="grid grid-cols-1 gap-3 p-4 bg-blue-50 rounded-lg">
               <div v-for="(value, pollutant) in selectedDayData.pollutants" :key="pollutant" 

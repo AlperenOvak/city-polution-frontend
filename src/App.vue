@@ -60,14 +60,11 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import DatePicker from './components/DatePicker.vue';
 import CitySelector from './components/CitySelector.vue';
 import HeatCalendar from './components/HeatCalendar.vue';
 import {
-  MaContentScroller,
-  MaRadioCard,
-  MaRadioGroup,
   MaButton,
   MaTypography,
   MaNotification,
@@ -77,88 +74,65 @@ import { useSettingStore } from './stores/settingStore';
 import pollutionAPI from './services/pollutionAPI.js';
 import { ref, watch, onMounted } from 'vue';
 
-export default {
-  name: 'App',
-  components: {
-    DatePicker,
-    MaContentScroller,
-    MaRadioCard,
-    MaRadioGroup,
-    MaButton,
-    MaTypography,
-    CitySelector,
-    MaNotification,
-    MaAnimation,
-    HeatCalendar
-  },
-  setup() {
-    const settingStore = useSettingStore();
-    const loading = ref(false);
-    const pollutionData = ref([]);
+const settingStore = useSettingStore();
+const loading = ref(false);
+const pollutionData = ref([]);
+
+const handleCheck = async () => {
+  if (!settingStore.selectedCity || !settingStore.dateRange) {
+    return; // Silently return if data is not ready
+  }
+
+  loading.value = true;
+
+  try {
+    const data = await pollutionAPI.getHistoricData(
+      settingStore.selectedCity,
+      new Date(settingStore.dateRange[0]),
+      new Date(settingStore.dateRange[1])
+    );
+
+    pollutionData.value = data;
+
+    // Trigger HeatCalendar update
+    window.dispatchEvent(new CustomEvent('pollutionDataUpdated', { 
+      detail: data 
+    }));
+
+  } catch (err) {
+    MaNotification.error(
+        {"size":"large",
+          "variant":"filled",
+          "title":"Failed to fetch data",
+          "description":err.message
+        }
+    )
     
-    const handleCheck = async () => {
-      if (!settingStore.selectedCity || !settingStore.dateRange) {
-        return; // Silently return if data is not ready
-      }
-
-      loading.value = true;
-
-      try {
-        const data = await pollutionAPI.getHistoricData(
-          settingStore.selectedCity,
-          new Date(settingStore.dateRange[0]),
-          new Date(settingStore.dateRange[1])
-        );
-
-        pollutionData.value = data;
-
-        // Trigger HeatCalendar update
-        window.dispatchEvent(new CustomEvent('pollutionDataUpdated', { 
-          detail: data 
-        }));
-
-      } catch (err) {
-        MaNotification.error(
-            {"size":"large",
-              "variant":"filled",
-              "title":"Failed to fetch data",
-              "description":err.message
-            }
-        )
-        
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    // Watch for changes in selectedCity and dateRange
-    watch(
-      () => settingStore.selectedCity,
-      () => {
-        handleCheck();
-      }
-    );
-
-    watch(
-      () => settingStore.dateRange,
-      () => {
-        handleCheck();
-      },
-      { deep: true }
-    );
-
-    // Initial data load
-    onMounted(() => {
-      handleCheck();
-    });
-
-    return {
-      loading,
-      pollutionData,
-      settingStore
-    };
-  },
+  } finally {
+    loading.value = false;
+  }
 };
+
+// Watch for changes in selectedCity and dateRange
+watch(
+  () => settingStore.selectedCity,
+  () => {
+    handleCheck();
+  }
+);
+
+watch(
+  () => settingStore.dateRange,
+  () => {
+    handleCheck();
+  },
+  { deep: true }
+);
+
+// Initial data load
+onMounted(() => {
+  handleCheck();
+});
 </script>
 
 <style scoped>

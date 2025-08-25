@@ -47,8 +47,8 @@ class PollutionAPI {
 
   /**
    * Calculate overall pollution level from categories
-   * @param {Array} categories 
-   * @returns {Object}
+   * @param {Object} categories - Object with pollutant names as keys and pollution level names as values
+   * @returns {Object} Object containing overallLevel, averageValue, and pollutants with numeric values
    */
     analyzePollution(categories) {
         const pollutants = { ...categories }; // clone object

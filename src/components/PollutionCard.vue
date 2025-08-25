@@ -150,6 +150,6 @@ const modalVisible = computed({
         </div>
       </div>
     </template> 
-    <template #title>{{ selectedDayData?.formattedDate + ', ' + selectedDayData?.dayData.cityName || 'Pollution Data' }}</template>
+    <template #title>{{ selectedDayData?.formattedDate && selectedDayData?.dayData?.cityName ? selectedDayData.formattedDate + ', ' + selectedDayData.dayData.cityName : 'Pollution Data' }}</template>
   </MaModal>
 </template>

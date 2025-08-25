@@ -22,32 +22,16 @@
   </MaRadioGroup>
 </template>
 
-<script>
-import { ref, computed } from 'vue';
+<script setup>
+import { computed } from 'vue';
 import { MaRadioCard, MaRadioGroup } from '@mobileaction/action-kit';
 import { useSettingStore } from '../stores/settingStore';
 
-export default {
-  name: 'CitySelector',
-  components: {
-    MaRadioCard,
-    MaRadioGroup
-  },
-  setup() {
-    const settingStore = useSettingStore();
-    const selectedValue = computed({
-      get: () => settingStore.getSelectedCity,
-      set: (value) => settingStore.setSelectedCity(value)
-    });
-    const options = settingStore.getCityOptions;
-
-    return {
-      selectedValue,
-      options,
-    };
-  },
-};
+const settingStore = useSettingStore();
+const selectedValue = computed({
+  get: () => settingStore.getSelectedCity,
+  set: (value) => settingStore.setSelectedCity(value)
+});
+const options = settingStore.getCityOptions;
 </script>
 
-<style scoped>
-</style>
